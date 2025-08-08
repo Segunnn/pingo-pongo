@@ -20,7 +20,9 @@ const std::string ball_symbol = "○";
 std::mutex mtx;
 std::atomic<bool> game_running(true);
 
+const bool DEBUG_MODE = false;
 
+int score = 0;
 
 struct Board{
   int width = 75;
@@ -108,13 +110,13 @@ class Ball{
         if(Ycord > 1 && Xcord+1 < board.width) {
           downright();
           break;
-        } else if (Ycord == 1) {
+        } else if (Ycord == 1 && Xcord+1 < board.width) {
           this->direction = upr;
           upright();
-        } else if (Xcord+1 == board.width){
+        } else if (Xcord+1 == board.width && Ycord > 0){
           this->direction = downl;
           downleft();
-        } else {
+        } else{
           this->direction = upl;
           upleft();
         }
@@ -213,7 +215,12 @@ void gameVisual(Ball& ball, Paddle& paddle) {
     {
       std::lock_guard<std::mutex> lock(mtx);
       print_board(std::ref(ball), std::ref(paddle));
-      std::cout << "⬆️ / ⬇️ / q: \n";
+      std::cout << "⬆️ / ⬇️ / q | \e[38;5;93m Score: " << score << "\e[38;5;15m \n";
+      if (DEBUG_MODE) {
+      std::cout << "Ball direction: " << ball.direction << '\n';
+      std::cout << "Ball X: " << ball.get_x() << '\n';
+      std::cout << "Ball Y: " << ball.get_y() << '\n';
+      }
     } 
   
   }
@@ -229,6 +236,8 @@ void gameLogic(Ball& ball, Paddle& paddle) {
       game_running = false;
       gameOver();
       break;
+    } else if (ball.get_x() == 1) {
+      score++;
     }
 
 
@@ -256,6 +265,7 @@ int main() {
   std::thread game_logic(gameLogic, std::ref(ball), std::ref(paddle));
 
   pad_control.join();
+  gameOver();
   return 0;
 }
 
