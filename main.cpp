@@ -68,7 +68,10 @@ class Ball{
         } else if (Ycord == board.height) {
           this->direction = downl;
           downleft();
-        } else {
+        } else if (Ycord == board.height && Xcord == 1) {
+          this->direction = downr;
+          downright();
+        }else {
           this->direction = upr;
           upright();
         }
@@ -150,13 +153,12 @@ void print_board(Ball& ball, Paddle& paddle) {
   using std::cout;
   system("clear");
 
-  for(int i = board.width; i > 0; i--) {cout << "_";}
-  cout << '\n';
-  for(int y = board.height; y > 0; y--) {
+  for(int y = board.height+1; y > 0; y--) {
     for(int x = 0; x <= board.width; x++) {
       // Printing '|' if it's paddle or right wall (only near a ball's Y location)
-      
-      if(x == 0 && y >= paddle.get_down() && y <= paddle.get_down() + paddle.size-1){
+      if(y == board.height+1) {
+        cout << "_";
+      } else if(x == 0 && y >= paddle.get_down() && y <= paddle.get_down() + paddle.size-1){
         cout << "|";
       } else if (x == board.width && y >= ball.get_y()-1 && y <= ball.get_y()+1){
         cout << "|";
@@ -168,6 +170,12 @@ void print_board(Ball& ball, Paddle& paddle) {
   }
   for(int i = board.width; i > 0; i--) {cout << "-";}
 
+}
+
+void gameOver() {
+  std::string text = "\e[1;31m _______  _______  _______  _______    _______           _______  _______ \n\e[1;31m(  ____ \\(  ___  )(       )(  ____ \\  (  ___  )|\\     /|(  ____ \\(  ____ )\n\e[1;31m| (    \\/| (   ) || () () || (    \\/  | (   ) || )   ( || (    \\/| (    )|\n\e[1;31m| |      | (___) || || || || (__      | |   | || |   | || (__    | (____)|\n\e[1;31m| | ____ |  ___  || |(_)| ||  __)     | |   | |( (   ) )|  __)   |     __)\n\e[1;31m| | \\_  )| (   ) || |   | || (        | |   | | \\ \\_/ / | (      | (\\ (   \n\e[1;31m| (___) || )   ( || )   ( || (____/\\  | (___) |  \\   /  | (____/\\| ) \\ \\__\n\e[1;31m(_______)|/     \\||/     \\|(_______/  (_______)   \\_/   (_______/|/   \\__/";
+  system("clear");
+  std::cout << text << '\n';
 }
 
 void setRawMode(bool enable);
@@ -206,7 +214,6 @@ void gameVisual(Ball& ball, Paddle& paddle) {
       std::lock_guard<std::mutex> lock(mtx);
       print_board(std::ref(ball), std::ref(paddle));
       std::cout << "⬆️ / ⬇️ / q: \n";
-      std::cout << ball.direction << '\n';
     } 
   
   }
@@ -220,6 +227,7 @@ void gameLogic(Ball& ball, Paddle& paddle) {
     // Game over
     if(ball.get_x() == 1 && (ball.get_y() < paddle.get_down() || ball.get_y() > paddle.get_down()+paddle.size-1)) {
       game_running = false;
+      gameOver();
       break;
     }
 
